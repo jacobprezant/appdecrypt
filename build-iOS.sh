@@ -3,12 +3,14 @@
 set -e
 
 NAME=appdecrypt
+BUILD_OUTPUT=".build/release/appdecrypt"
+OUTPUT="./appdecrypt"
 SDK_VERSION=11.0
 
 function build() {
   START=$(date +%s)
 
-  swift build --product $NAME \
+  swift build --product "$NAME" \
     -c release \
     -Xswiftc "-sdk" \
     -Xswiftc "$(xcrun --sdk iphoneos --show-sdk-path)" \
@@ -33,11 +35,14 @@ function main() {
 
 main
 
-mv .build/release/appdecrypt .
-chmod +x appdecrypt
+if [ -L "$OUTPUT" ]; then
+  rm -f "$OUTPUT"
+fi
+cp "$BUILD_OUTPUT" "$OUTPUT"
+chmod 0755 "$OUTPUT"
 ldid -Sglobal.xml appdecrypt
 
 # if ip is provided, send to the device in one go
 if [ -n "$1" ]; then
-  scp appdecrypt mobile@$1:/var/mobile/Documents/appdecrypt
+  scp -- appdecrypt "mobile@$1:/var/mobile/Documents/appdecrypt"
 fi
